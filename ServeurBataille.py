@@ -55,10 +55,77 @@ def affichage(joueur):
         print(morp)
     print("------------------------------------------")
 #--------------------------------------------------------------------------
+
+#Fonction placer bateau comprenant le fonction traitement
+#--------------------------------------------------------------------------
+mesbateau = [4] # Taille du bateau
+def placerbateau (joueur,addr,sock) :
+    placebateau = "Place ton bateau"
+    for i in range (len(mesbateau)) :
+        if joueur == 2:
+            taille = mesbateau[i]
+            print (placebateau)
+            position = input("->")
+            flag = traitement(taille,position,joueur)
+        elif joueur == 1:
+            taille = mesbateau[i]
+            sock.sendto(placebateau.encode(),addr)
+            data, addr = sock.recvfrom(1024)
+            flag = traitement(taille,data.decode(),joueur)     
+
+        if flag == 0 :
+            print ("problème de direction (Haut->h Bas->b Guauche->g Droite->d)")
+        elif flag == 1 :
+            print ("Ce bateau chevauche un autre bateau déja placé")
+    return addr,sock 
+
+def traitement(taille,position,joueur):
+    licoldi = position.split(".")
+    ligne = licoldi[0]
+    ligne = int(ligne)
+    licoldi = licoldi[1].split(" ")
+    colonne = licoldi[0]
+    colonne = int(colonne)
+    direction = licoldi[1]
+
+    if joueur == 1:
+        bateau = bateau1
+    elif joueur == 2:
+        bateau = bateau2
     
-#Programme principal      
+    if (direction == "h") and ((taille+ligne+1) > 7) :
+        for i in range (0,taille) :
+            if (bateau[ligne-i][colonne]) == "=" :
+                return 1
+        for j in range (0,taille) :
+            bateau[ligne-j][colonne] = "="
+    elif (direction == "b") and ((taille+ligne+1) <= 11) :
+        for i in range (0,taille) :
+            if (bateau[ligne+i][colonne]) == "=" :
+                return 1
+        for j in range (0,taille) :
+            bateau[ligne+j][colonne] = "="
+    elif (direction == "g") and ((taille+colonne+1) > 7) :
+        for i in range (0,taille) :
+            if (bateau[ligne][colonne-i]) == "=" :
+                return 1
+        for j in range (0,taille) :
+            bateau[ligne][colonne-j] = "="
+    elif (direction == "d") and ((taille+colonne+1) <= 11) :
+        for i in range (0,taille) :
+            if (bateau[ligne][colonne+i]) == "=" :
+                return 1 
+        for j in range (0,taille) :
+            bateau[ligne][colonne+j] = "="
+    else:
+        return 0
+#--------------------------------------------------------------------------
+
+#Programme principal qui lance les fonctions dans l'odre       
 affichage(client)
+addr,sock = placerbateau(client,addr,sock)
 affichage(serveur)
+addr,sock = placerbateau(serveur,addr,sock)
     
 
 
