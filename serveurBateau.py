@@ -1,5 +1,5 @@
 import socket
-serveur = "10.160.108.14" #add ip du serveur
+serveur = "10.160.108.10" #add ip du serveur
 UDP_PORT = 5005 #ouverture port
 sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM) #socket en attente de connexion
 
