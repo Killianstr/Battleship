@@ -14,3 +14,4 @@ Tester après chaque étapes et sous étapes, puis résoudre les erreurs s'il y 
 Modifier fonction 2 pour placer plusieurs bateaux de différentes tailles et afficher le nombres de bateaux restant à placer
 Modifier fonction 4 pour afficher nombre de bateaux coulés
 Proposer de rejouer et d'annuler le dernier coup
+paufinner l'affichage
