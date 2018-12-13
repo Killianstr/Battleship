@@ -15,3 +15,4 @@ Modifier fonction 2 pour placer plusieurs bateaux de différentes tailles et aff
 Modifier fonction 4 pour afficher nombre de bateaux coulés
 Proposer de rejouer et d'annuler le dernier coup
 paufinner l'affichage
+si bateau touché on rejoue
