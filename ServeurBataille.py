@@ -4,10 +4,13 @@ import socket
 #--------------------------------------------------------------------------
 client = 1
 serveur = 2
-bombe1 = [['1','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],]
-bombe2 = [['2','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],]
-bateau1 = [['1','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],]
-bateau2 = [['2','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],['/','/','/','/','/','/','/','/','/','/'],]
+bombe1 = [[" " for j in range(10)] for i in range(10)]
+bateau1 = [[" " for j in range(10)] for i in range(10)]
+bombe2 = [[" " for j in range(10)] for i in range(10)]
+bateau2 = [[" " for j in range(10)] for i in range(10)]
+mesbateau = [4] # Taille du bateau
+pointclient = 0
+pointserveur = 0
 #--------------------------------------------------------------------------
 
 #Connexion au client
@@ -58,20 +61,31 @@ def affichage(joueur):
 
 #Fonction placer bateau comprenant le fonction traitement
 #--------------------------------------------------------------------------
-mesbateau = [4] # Taille du bateau
 def placerbateau (joueur,addr,sock) :
-    placebateau = "Place ton bateau"
+    if joueur == 2:
+        print ("Place ton bateau")
+    elif joueur == 1:
+        sock.sendto("Place ton bateau".encode(),addr)
     for i in range (len(mesbateau)) :
         if joueur == 2:
             taille = mesbateau[i]
-            print (placebateau)
-            position = input("->")
-            flag = traitement(taille,position,joueur)
+            
+            ligne = input("Ligne -> ")
+            colonne = input("Colonne -> ")
+            direction = input("Direction (Haut->h Bas->b Guauche->g Droite->d) -> ")
+            
+            flag = traitement(taille,ligne,colonne,direction,joueur)
         elif joueur == 1:
             taille = mesbateau[i]
-            sock.sendto(placebateau.encode(),addr)
+            
             data, addr = sock.recvfrom(1024)
-            flag = traitement(taille,data.decode(),joueur)     
+            ligne = data.decode()
+            data, addr = sock.recvfrom(1024)
+            colonne = data.decode()
+            data, addr = sock.recvfrom(1024)
+            direction = data.decode()
+            
+            flag = traitement(taille,ligne,colonne,direction,joueur)    
 
         if flag == 0 :
             print ("problème de direction (Haut->h Bas->b Guauche->g Droite->d)")
@@ -79,19 +93,14 @@ def placerbateau (joueur,addr,sock) :
             print ("Ce bateau chevauche un autre bateau déja placé")
     return addr,sock 
 
-def traitement(taille,position,joueur):
-    licoldi = position.split(".")
-    ligne = licoldi[0]
-    ligne = int(ligne)
-    licoldi = licoldi[1].split(" ")
-    colonne = licoldi[0]
-    colonne = int(colonne)
-    direction = licoldi[1]
-
+def traitement(taille,ligne,colonne,direction,joueur):
     if joueur == 1:
         bateau = bateau1
     elif joueur == 2:
         bateau = bateau2
+
+    ligne = int(ligne)
+    colonne = int(colonne)
     
     if (direction == "h") and ((taille+ligne+1) > 7) :
         for i in range (0,taille) :
@@ -121,11 +130,87 @@ def traitement(taille,position,joueur):
         return 0
 #--------------------------------------------------------------------------
 
-#Programme principal qui lance les fonctions dans l'odre       
-affichage(client)
-addr,sock = placerbateau(client,addr,sock)
+#Fonction placer Bombe
+#--------------------------------------------------------------------------
+def placerbombe (joueur , point, addr, sock) :
+    if joueur == 2 :
+        ligne = int(input("Position de la ligne de tir ? "))
+        colonne = int(input("Position de la colonne de tir ? "))
+
+        if bateau1[ligne][colonne] == "=":
+            print ("====>Bateau adverse touché<====")
+            sock.sendto("====>Votre bateau est touché<====".encode(), addr)
+            point += 1
+            bateau1[ligne][colonne]="X"
+            bombe2[ligne][colonne]="X"
+            
+        elif bateau1[ligne][colonne] == "X":
+            print ("====>Bateau déja touché<====")
+            sock.sendto("====>Votre adversaire à raté son tire<====".encode(), addr)
+
+        elif bateau1[ligne][colonne] == "*":
+            print ("====>Tire déja raté<====")
+            sock.sendto("====>Votre adversaire à raté son tire<====".encode(), addr)
+
+        else :
+            bateau1[ligne][colonne]="*"
+            bombe2[ligne][colonne]="*"
+            print ("====>Bateau raté<====")
+            sock.sendto("====>Votre adversaire à tiré dans l'eau<====".encode(), addr)
+            
+    elif joueur == 1 :
+        sock.sendto("Ligne de tir ? ".encode(), addr)
+        data, addr = sock.recvfrom(1024)
+        ligne = int (data.decode())
+
+
+        sock.sendto("Colonne de tir  ? ".encode(), addr)
+        data, addr = sock.recvfrom(1024)
+        colonne = int (data.decode())
+
+        if bateau2[ligne][colonne] == "=":
+            print ("====>Votre bateau est touché<====")
+            sock.sendto("====>Bateau adverse touché<====".encode(), addr)
+            point += 1
+            bateau2[ligne][colonne]= "X"
+            bombe1[ligne][colonne]= "X"
+
+        elif bateau2[ligne][colonne] == "X":
+            print ("====>Votre adversaire à raté son tire<====")
+            sock.sendto("====>Bateau déja touché<====".encode(), addr)
+
+        elif bateau2[ligne][colonne] == "*":
+            print ("====>Votre adversaire à raté son tire<====")
+            sock.sendto("====>Tire déja raté<====".encode(), addr)
+
+        else :
+            bateau2[ligne][colonne]="*"
+            bombe1[ligne][colonne]="*"
+            print("====>Votre adversaire à tiré dans l'eau<====")
+            sock.sendto("====>Bateau raté<====".encode(), addr)
+        
+    return addr,sock,point
+#--------------------------------------------------------------------------
+
+
+#Programme principal qui lance les fonctions dans l'odre
 affichage(serveur)
+addr,sock = placerbateau(client,addr,sock)
 addr,sock = placerbateau(serveur,addr,sock)
-    
+affichage(serveur)
+
+while pointclient <4 and pointserveur <4 : #A modifier pour plusieurs bateaux 
+    addr,sock,pointserveur = placerbombe (serveur , pointserveur,addr, sock)
+    affichage(serveur)  
+    addr,sock,pointclient = placerbombe (client , pointclient,addr, sock)
+    affichage(serveur)  
+
+    print ("-------------------")
+    print ("Point client  :",pointclient,"|")
+    print ("Point serveur :",pointserveur,"|")
+    print ("-------------------")
+
+print("Fin de la game")
+sock.sendto("Fin de la game".encode(), addr)
 
 
