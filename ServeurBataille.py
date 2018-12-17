@@ -15,7 +15,7 @@ pointserveur = 0
 
 #Connexion au client
 #--------------------------------------------------------------------------
-UDP_IP = "192.168.1.18"
+UDP_IP = "10.160.108.14"
 UDP_PORT = 5005
 
 sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
@@ -63,18 +63,18 @@ def affichage(joueur):
 #--------------------------------------------------------------------------
 def placerbateau (joueur,addr,sock) :
     if joueur == 2:
+        bateau = bateau2
         print ("Place ton bateau")
     elif joueur == 1:
+        bateau = bateau1
         sock.sendto("Place ton bateau".encode(),addr)
     for i in range (len(mesbateau)) :
         if joueur == 2:
             taille = mesbateau[i]
-            
             ligne = input("Ligne -> ")
             colonne = input("Colonne -> ")
             direction = input("Direction (Haut->h Bas->b Guauche->g Droite->d) -> ")
             
-            flag = traitement(taille,ligne,colonne,direction,joueur)
         elif joueur == 1:
             taille = mesbateau[i]
             
@@ -85,7 +85,36 @@ def placerbateau (joueur,addr,sock) :
             data, addr = sock.recvfrom(1024)
             direction = data.decode()
             
-            flag = traitement(taille,ligne,colonne,direction,joueur)    
+        ligne = int(ligne)
+        colonne = int(colonne)
+        flag = 0
+    
+        if (direction == "h") and ((taille+ligne+1) > 7) :
+            for i in range (0,taille) :
+                if (bateau[ligne-i][colonne]) == "=" :
+                    flag = 1
+            for j in range (0,taille) :
+                bateau[ligne-j][colonne] = "="
+        elif (direction == "b") and ((taille+ligne+1) <= 11) :
+            for i in range (0,taille) :
+                if (bateau[ligne+i][colonne]) == "=" :
+                    flag = 1
+            for j in range (0,taille) :
+                bateau[ligne+j][colonne] = "="
+        elif (direction == "g") and ((taille+colonne+1) > 7) :
+            for i in range (0,taille) :
+                if (bateau[ligne][colonne-i]) == "=" :
+                    flag = 1
+            for j in range (0,taille) :
+                bateau[ligne][colonne-j] = "="
+        elif (direction == "d") and ((taille+colonne+1) <= 11) :
+            for i in range (0,taille) :
+                if (bateau[ligne][colonne+i]) == "=" :
+                    flag = 1 
+            for j in range (0,taille) :
+                bateau[ligne][colonne+j] = "="
+        else:
+            flag = 0    
 
         if flag == 0 :
             print ("problème de direction (Haut->h Bas->b Guauche->g Droite->d)")
@@ -93,41 +122,6 @@ def placerbateau (joueur,addr,sock) :
             print ("Ce bateau chevauche un autre bateau déja placé")
     return addr,sock 
 
-def traitement(taille,ligne,colonne,direction,joueur):
-    if joueur == 1:
-        bateau = bateau1
-    elif joueur == 2:
-        bateau = bateau2
-
-    ligne = int(ligne)
-    colonne = int(colonne)
-    
-    if (direction == "h") and ((taille+ligne+1) > 7) :
-        for i in range (0,taille) :
-            if (bateau[ligne-i][colonne]) == "=" :
-                return 1
-        for j in range (0,taille) :
-            bateau[ligne-j][colonne] = "="
-    elif (direction == "b") and ((taille+ligne+1) <= 11) :
-        for i in range (0,taille) :
-            if (bateau[ligne+i][colonne]) == "=" :
-                return 1
-        for j in range (0,taille) :
-            bateau[ligne+j][colonne] = "="
-    elif (direction == "g") and ((taille+colonne+1) > 7) :
-        for i in range (0,taille) :
-            if (bateau[ligne][colonne-i]) == "=" :
-                return 1
-        for j in range (0,taille) :
-            bateau[ligne][colonne-j] = "="
-    elif (direction == "d") and ((taille+colonne+1) <= 11) :
-        for i in range (0,taille) :
-            if (bateau[ligne][colonne+i]) == "=" :
-                return 1 
-        for j in range (0,taille) :
-            bateau[ligne][colonne+j] = "="
-    else:
-        return 0
 #--------------------------------------------------------------------------
 
 #Fonction placer Bombe

@@ -1,7 +1,7 @@
 import socket
 
 UDP_PORT = 5005
-UDP_IP= "192.168.1.18"
+UDP_IP= "10.160.108.14"
 
 bombe = [[" " for j in range(10)] for i in range(10)]
 bateau = [[" " for j in range(10)] for i in range(10)]
@@ -11,7 +11,7 @@ bateau = [[" " for j in range(10)] for i in range(10)]
 sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 sock.connect((UDP_IP,UDP_PORT))
 
-go = input("Lancer une partie (1) pour oui : ")
+go = input("Appuyer sur une touche pour commencer ")
 sock.send(go.encode())
 #--------------------------------------------------------------------------
 
